@@ -1,13 +1,26 @@
 import numpy as np
 import torch
 import torch.nn as nn
+from torch.utils.data import DataLoader, sampler
+from torchvision import datasets, transforms
 
+# Necessary Hyperparameters 
+num_epochs = 40
+learning_rate = 0.0001
+batch_size = 64
+latent_dim = 10
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+])
+
+def denorm(x):
+    return x
+    
 class VAE(nn.Module):
     def __init__(self, latent_dim):
         super(VAE, self).__init__()
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
+
         self.latent_dim = latent_dim
         self.z_dim = 28//2**2
 
@@ -35,62 +48,34 @@ class VAE(nn.Module):
          
         )
 
-     
-        #######################################################################
-        #                       ** END OF YOUR CODE **
-        ####################################################################### 
-        
     def encode(self, x):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
         x = self.encoder(x)
         x = x.view(x.size(0), -1)
         mu = self.fc_mu(x)
         log_var = self.fc_log_var(x)
         return mu, log_var
-
-        #######################################################################
-        #                       ** END OF YOUR CODE **
-        ####################################################################### 
     
     def reparametrize(self, mu, logvar): #REPARAMETRIZATION TRICK: normal distributions are just scaled and translated 
         #from normal distributions 
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
         std = torch.exp(0.5*logvar) 
         eps = torch.randn_like(std) #random noise
         return mu + std*eps
-        #######################################################################
-        #                       ** END OF YOUR CODE **
-        ####################################################################### 
 
     def decode(self, z):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
         z = self.fc2(z)
         dec = z.view(z.size(0), 32, self.z_dim, self.z_dim)
         dec = self.decoder(dec)
         return dec 
-        #######################################################################
-        #                       ** END OF YOUR CODE **
-        ####################################################################### 
+    
     
     def forward(self, x):
-        #######################################################################
-        #                       ** START OF YOUR CODE **
-        #######################################################################
         mean, logvar = self.encode(x)
         z = self.reparametrize(mean, logvar)
         output = self.decode(z)
         return output, mean, logvar
-        #######################################################################
-        #                       ** END OF YOUR CODE **
-        ####################################################################### 
+        
 
-model = VAE(latent_dim).to(device)
+model = VAE(latent_dim)
 params = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print("Total number of parameters is: {}".format(params))
 print(model)
